@@ -11,7 +11,7 @@
     <AssemblyName>DiscAnalyzer</AssemblyName>
     <Product>DiscAnalyzer</Product>
     <Description>Cross Platform Disc Space Analyzer</Description>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     
     <!-- Reduce app size -->
     <PublishTrimmed>true</PublishTrimmed>
