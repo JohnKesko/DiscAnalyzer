@@ -1,0 +1,389 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Disc.Analyzer.ViewModels"
+        xmlns:models="using:Disc.Analyzer.Models"
+        xmlns:views="using:Disc.Analyzer.Views"
+        xmlns:fi="using:FluentIcons.Avalonia"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1025" d:DesignHeight="700"
+        x:Class="Disc.Analyzer.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/icon02.png"
+        Title="DiscAnalyzer - Cross Platform Disc Space Analyzer"
+        MinWidth="825" MinHeight="700"
+        Width="1025" Height="700">
+
+    <Design.DataContext>
+        <!-- Design-time mock data - use DesignTimeData.MainViewModel -->
+        <x:Static Member="vm:DesignTimeData.MainViewModel"/>
+    </Design.DataContext>
+
+    <Window.Styles>
+        <!-- Size bar style -->
+        <Style Selector="Border.sizeBar">
+            <Setter Property="Height" Value="4"/>
+            <Setter Property="CornerRadius" Value="2"/>
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+        
+        <!-- NumericUpDown text selection - gray instead of blue -->
+        <Style Selector="NumericUpDown TextBox">
+            <Setter Property="SelectionBrush" Value="#CCCCCC"/>
+        </Style>
+        
+        <!-- TextBox text selection - gray instead of blue -->
+        <Style Selector="TextBox">
+            <Setter Property="SelectionBrush" Value="#CCCCCC"/>
+        </Style>
+        
+        <!-- TreeViewItem selection - theme aware -->
+        <Style Selector="TreeViewItem:selected /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+        </Style>
+        
+        <!-- TreeViewItem hover -->
+        <Style Selector="TreeViewItem:pointerover /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+            <Setter Property="Opacity" Value="0.7"/>
+        </Style>
+        
+        <!-- TreeViewItem selected + hover -->
+        <Style Selector="TreeViewItem:selected:pointerover /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListMediumBrush}"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+        
+        <!-- Top Bar -->
+        <Border Grid.Row="0" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="16,10">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <!-- App Title -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <fi:SymbolIcon Symbol="FolderOpen" FontSize="20" Foreground="#3B82F6"/>
+                    <TextBlock Text="DiscAnalyzer" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="v1.0" FontSize="11" Opacity="0.6" VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <!-- Search Box -->
+                <TextBox Grid.Column="1" 
+                         Name="SearchBox"
+                         Text="{Binding SearchText}"
+                         Watermark="Search folders..."
+                         Margin="32,0"
+                         MaxWidth="400"/>
+                
+                <!-- Settings Button with Flyout -->
+                <Button Grid.Column="2" 
+                        Background="Transparent"
+                        Padding="8"
+                        Margin="4,0"
+                        ToolTip.Tip="Settings">
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <StackPanel Spacing="16" Width="280">
+                                <TextBlock Text="Settings" FontWeight="SemiBold" FontSize="16"/>
+                                
+                                <Border Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+                                
+                                <!-- Show Files Toggle -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel>
+                                        <TextBlock Text="Show individual files"/>
+                                        <TextBlock Text="Display files in the tree view" FontSize="11" Opacity="0.6"/>
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="1" IsChecked="{Binding SettingsShowFiles}" 
+                                                  OnContent="" OffContent="" Margin="0,-8,0,0"/>
+                                </Grid>
+                                
+                                <!-- Default Expansion Level -->
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Default expansion level"/>
+                                    <TextBlock Text="How many levels to expand by default" FontSize="11" Opacity="0.6"/>
+                                    <NumericUpDown Value="{Binding SettingsDefaultExpansionLevel}" 
+                                                   Minimum="0" Maximum="10" 
+                                                   Increment="1" 
+                                                   FormatString="0"
+                                                   Width="100"
+                                                   HorizontalAlignment="Left"/>
+                                </StackPanel>
+                                
+                                <!-- Max Parallelism -->
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Scan parallelism"/>
+                                    <TextBlock Text="Number of parallel threads for scanning" FontSize="11" Opacity="0.6"/>
+                                    <NumericUpDown Value="{Binding SettingsMaxParallelism}" 
+                                                   Minimum="1" Maximum="32" 
+                                                   Increment="1" 
+                                                   FormatString="0"
+                                                   Width="100"
+                                                   HorizontalAlignment="Left"/>
+                                </StackPanel>
+                                
+                                <Border Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+                                
+                                <!-- Auto Update -->
+                                <StackPanel Spacing="4">
+                                    <ToggleSwitch IsChecked="{Binding SettingsAutoUpdate}"
+                                                  OnContent="Auto-update enabled"
+                                                  OffContent="Auto-update disabled"/>
+                                    <TextBlock Text="Automatically check for and install updates" FontSize="11" Opacity="0.6"/>
+                                </StackPanel>
+                                
+                                <Border Height="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+                                
+                                <TextBlock Text="Settings are saved automatically" 
+                                           FontSize="11" Opacity="0.5" FontStyle="Italic"/>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                    <fi:SymbolIcon Symbol="Settings" FontSize="18"/>
+                </Button>
+                
+                <!-- Select Folder Button -->
+                <Button Grid.Column="3"
+                        Command="{Binding SelectFolderCommand}"
+                        IsEnabled="{Binding !IsScanning}"
+                        Background="#3B82F6"
+                        Foreground="White"
+                        Padding="16,8"
+                        CornerRadius="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <fi:SymbolIcon Symbol="FolderAdd" FontSize="16" Foreground="White"/>
+                        <TextBlock Text="Select Folder"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+        
+        <!-- Update Available Banner -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Right"
+                Margin="16,60,16,0"
+                IsVisible="{Binding UpdateAvailable}"
+                Background="#10B981"
+                CornerRadius="6"
+                Padding="12,8"
+                ZIndex="100">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <fi:SymbolIcon Symbol="ArrowDownload" FontSize="16" Foreground="White"/>
+                <TextBlock Foreground="White" VerticalAlignment="Center">
+                    <Run Text="Update available: v"/>
+                    <Run Text="{Binding UpdateVersion}"/>
+                </TextBlock>
+                <Button Command="{Binding ApplyUpdateCommand}"
+                        IsVisible="{Binding UpdateReady}"
+                        Background="White"
+                        Foreground="#10B981"
+                        Padding="8,4"
+                        CornerRadius="4"
+                        FontSize="12">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <fi:SymbolIcon Symbol="ArrowSync" FontSize="12" Foreground="#10B981"/>
+                        <TextBlock Text="Restart to update"/>
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="Downloading..." 
+                           Foreground="White" 
+                           Opacity="0.8"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding !UpdateReady}"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Main Content - Folder Tree View -->
+        <views:FolderTreeView Grid.Row="1" DataContext="{Binding}"/>
+        
+        <!-- Drives Strip at Bottom -->
+        <Border Grid.Row="2" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,1,0,0"
+                Margin="0, 0, 0, 0"
+                Padding="10, 4, 10, 14">
+            <Grid RowDefinitions="Auto,Auto,Auto">
+                <!-- Header with Toggle -->
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,6">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <fi:SymbolIcon Symbol="Storage" FontSize="16" Foreground="#3B82F6"/>
+                        <TextBlock Text="Drives" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <!-- System Volumes Toggle Button -->
+                    <Button Grid.Column="2" 
+                            Command="{Binding ToggleSystemVolumesCommand}"
+                            Background="Transparent"
+                            Padding="0, 0, 0, 0"
+                            Margin="8,0"
+                            IsVisible="{Binding SystemDrivesCount}"
+                            ToolTip.Tip="Toggle system volumes">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <fi:SymbolIcon Symbol="Settings" FontSize="12" Opacity="0.6"/>
+                            <TextBlock Text="{Binding SystemDrivesText}" FontSize="11" Opacity="0.6"/>
+                            <fi:SymbolIcon FontSize="10" Opacity="0.6">
+                                <fi:SymbolIcon.Symbol>
+                                    <MultiBinding Converter="{x:Static vm:Converters.BoolToExpandIcon}">
+                                        <Binding Path="ShowSystemVolumes"/>
+                                    </MultiBinding>
+                                </fi:SymbolIcon.Symbol>
+                            </fi:SymbolIcon>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Grid.Column="3" 
+                            Command="{Binding RefreshDrivesCommand}"
+                            Background="Transparent"
+                            Padding="4"
+                            ToolTip.Tip="Refresh drives">
+                        <fi:SymbolIcon Symbol="ArrowSync" FontSize="12"/>
+                    </Button>
+                </Grid>
+                
+                <!-- Main Drives - Always Visible -->
+                <ScrollViewer Grid.Row="1" 
+                              HorizontalScrollBarVisibility="Auto" 
+                              VerticalScrollBarVisibility="Disabled"
+                              Margin="0,0,0,0"
+                              Padding="0,0,0,0"
+                              >
+                    <ItemsControl ItemsSource="{Binding MainDrives}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="0"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:DriveInfoModel">
+                                <Button Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).ScanDriveCommand}"
+                                        CommandParameter="{Binding}"
+                                        Background="{Binding IsSelected, Converter={x:Static vm:Converters.IsSelectedToBackground}}"
+                                        Padding="4, 4"
+                                        Margin="0,0,0,20"
+                                        CornerRadius="6"
+                                        MinWidth="140"
+                                        ToolTip.Tip="{Binding RootPath}">
+                                    <Grid RowDefinitions="Auto,Auto,Auto">
+                                        <!-- Drive Name with Category Icon and Mount Point -->
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <Panel Margin="0,0,4,0">
+                                                <fi:SymbolIcon Symbol="Home" FontSize="14" 
+                                                               Foreground="#3B82F6"
+                                                               IsVisible="{Binding Category, Converter={x:Static vm:Converters.IsCategoryMain}}"/>
+                                                <fi:SymbolIcon Symbol="UsbStick" FontSize="14" 
+                                                               Foreground="#10B981"
+                                                               IsVisible="{Binding Category, Converter={x:Static vm:Converters.IsCategoryExternal}}"/>
+                                                <fi:SymbolIcon Symbol="Cloud" FontSize="14" 
+                                                               Foreground="#8B5CF6"
+                                                               IsVisible="{Binding Category, Converter={x:Static vm:Converters.IsCategoryNetwork}}"/>
+                                            </Panel>
+                                            <StackPanel Grid.Column="1" Spacing="0">
+                                                <TextBlock Text="{Binding ShortName}" 
+                                                           FontWeight="SemiBold"
+                                                           FontSize="11"
+                                                           MaxWidth="120"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding MountPoint}" 
+                                                           FontSize="11"
+                                                           Opacity="0.6"
+                                                           IsVisible="{Binding MountPoint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        
+                                        <!-- Usage Bar -->
+                                        <Grid Grid.Row="1" Margin="0,4,0,3" Width="120" HorizontalAlignment="Left">
+                                            <Border Height="5" CornerRadius="2.5" 
+                                                    Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
+                                            <Border Height="5" CornerRadius="2.5" 
+                                                    HorizontalAlignment="Left"
+                                                    Background="{Binding UsedPercentage, Converter={x:Static vm:Converters.PercentageToBarColor}}"
+                                                    Width="{Binding UsedPercentage, Converter={x:Static vm:Converters.PercentageToCompactBarWidth}}"/>
+                                        </Grid>
+                                        
+                                        <!-- Size Info -->
+                                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="{Binding FreeSpaceText}" 
+                                                       FontSize="10" Opacity="0.6"/>
+                                            <TextBlock Text="•" FontSize="9" Opacity="0.4"/>
+                                            <TextBlock Text="{Binding FormattedTotalSize}" 
+                                                       FontSize="9" Opacity="0.6"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                
+                <!-- System Volumes - Collapsible, Compact -->
+                <Border Grid.Row="2" 
+                        IsVisible="{Binding ShowSystemVolumes}"
+                        Margin="0,8,0,0"
+                        Padding="0,8,0,0"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                        BorderThickness="0,1,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" 
+                                  VerticalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding SystemDrives}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="4"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:DriveInfoModel">
+                                    <Button Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).ScanDriveCommand}"
+                                            CommandParameter="{Binding}"
+                                            Background="{Binding IsSelected, Converter={x:Static vm:Converters.IsSelectedToBackground}}"
+                                            Padding="8,4"
+                                            CornerRadius="4"
+                                            Opacity="0.8"
+                                            ToolTip.Tip="{Binding RootPath}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <fi:SymbolIcon Symbol="Settings" FontSize="10" Opacity="0.5"/>
+                                            <TextBlock Text="{Binding ShortName}" 
+                                                       FontSize="11"
+                                                       MaxWidth="100"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+        
+        <!-- Status Bar -->
+        <Border Grid.Row="3" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="16,6">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding ProgressText}" 
+                           VerticalAlignment="Center"
+                           FontSize="12"/>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                    <TextBlock Text="{Binding StatusText}" 
+                               FontSize="12" Opacity="0.7"/>
+                    
+                    <!-- Cancel button when scanning -->
+                    <Button Command="{Binding CancelScanCommand}"
+                            IsVisible="{Binding IsScanning}"
+                            Padding="8,4"
+                            FontSize="12">
+                        <TextBlock Text="Cancel"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
