@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -56,6 +57,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _updateReady;
+
+    public string AppVersion => $"v{Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0"}";
 
     [ObservableProperty]
     private bool _isScanning;
