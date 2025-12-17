@@ -12,6 +12,10 @@
     <Product>DiscAnalyzer</Product>
     <Description>Cross Platform Disc Space Analyzer</Description>
     <Version>1.0.1</Version>
+    
+    <!-- Reduce app size -->
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>
