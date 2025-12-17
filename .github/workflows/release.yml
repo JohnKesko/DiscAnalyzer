@@ -1,0 +1,133 @@
+name: Release
+
+on:
+  workflow_dispatch:  # Manual trigger from GitHub UI
+  push:
+    paths:
+      - 'Disc.Analyzer.csproj'  # Only when version might change
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.VERSION }}
+      should_release: ${{ steps.check_tag.outputs.SHOULD_RELEASE }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from csproj
+        id: get_version
+        run: |
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' Disc.Analyzer.csproj)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Found version: $VERSION"
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.get_version.outputs.VERSION }}" >/dev/null 2>&1; then
+            echo "Tag v${{ steps.get_version.outputs.VERSION }} already exists, skipping release"
+            echo "SHOULD_RELEASE=false" >> $GITHUB_OUTPUT
+          else
+            echo "Tag v${{ steps.get_version.outputs.VERSION }} does not exist, will release"
+            echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            rid: osx-x64
+            name: macos-x64
+          - os: macos-latest
+            rid: osx-arm64
+            name: macos-arm64
+          - os: windows-latest
+            rid: win-x64
+            name: windows-x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: echo "VERSION=${{ needs.check-version.outputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Publish
+        run: |
+          dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
+
+      - name: Pack with Velopack (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          vpk pack \
+            --packId DiscAnalyzer \
+            --packVersion ${{ steps.version.outputs.VERSION }} \
+            --packDir publish/${{ matrix.rid }} \
+            --mainExe DiscAnalyzer \
+            --outputDir releases/${{ matrix.name }}
+
+      - name: Pack with Velopack (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          vpk pack `
+            --packId DiscAnalyzer `
+            --packVersion ${{ steps.version.outputs.VERSION }} `
+            --packDir publish/${{ matrix.rid }} `
+            --mainExe DiscAnalyzer.exe `
+            --outputDir releases/${{ matrix.name }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.name }}
+          path: releases/${{ matrix.name }}/*
+
+  release:
+    needs: [check-version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: releases
+          merge-multiple: true
+
+      - name: Create tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag v${{ needs.check-version.outputs.version }}
+          git push origin v${{ needs.check-version.outputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: DiscAnalyzer v${{ needs.check-version.outputs.version }}
+          files: releases/*
+          generate_release_notes: true
