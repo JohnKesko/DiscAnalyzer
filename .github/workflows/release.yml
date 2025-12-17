@@ -6,7 +6,7 @@ on:
     paths:
       - 'Disc.Analyzer.csproj'  # Only when version might change
     branches:
-      - main
+      - master
 
 jobs:
   check-version:
