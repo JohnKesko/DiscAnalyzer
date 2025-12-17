@@ -162,43 +162,6 @@
             </Grid>
         </Border>
         
-        <!-- Update Available Banner -->
-        <Border Grid.Row="0" Grid.RowSpan="3"
-                VerticalAlignment="Top"
-                HorizontalAlignment="Right"
-                Margin="16,60,16,0"
-                IsVisible="{Binding UpdateAvailable}"
-                Background="#10B981"
-                CornerRadius="6"
-                Padding="12,8"
-                ZIndex="100">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <fi:SymbolIcon Symbol="ArrowDownload" FontSize="16" Foreground="White"/>
-                <TextBlock Foreground="White" VerticalAlignment="Center">
-                    <Run Text="Update available: v"/>
-                    <Run Text="{Binding UpdateVersion}"/>
-                </TextBlock>
-                <Button Command="{Binding ApplyUpdateCommand}"
-                        IsVisible="{Binding UpdateReady}"
-                        Background="White"
-                        Foreground="#10B981"
-                        Padding="8,4"
-                        CornerRadius="4"
-                        FontSize="12">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <fi:SymbolIcon Symbol="ArrowSync" FontSize="12" Foreground="#10B981"/>
-                        <TextBlock Text="Restart to update"/>
-                    </StackPanel>
-                </Button>
-                <TextBlock Text="Downloading..." 
-                           Foreground="White" 
-                           Opacity="0.8"
-                           FontSize="11"
-                           VerticalAlignment="Center"
-                           IsVisible="{Binding !UpdateReady}"/>
-            </StackPanel>
-        </Border>
-        
         <!-- Main Content - Folder Tree View -->
         <views:FolderTreeView Grid.Row="1" DataContext="{Binding}"/>
         
@@ -208,6 +171,7 @@
                 BorderThickness="0,1,0,0"
                 Margin="0, 0, 0, 0"
                 Padding="10, 4, 10, 14">
+                
             <Grid RowDefinitions="Auto,Auto,Auto">
                 <!-- Header with Toggle -->
                 <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,6">
@@ -371,10 +335,45 @@
                            VerticalAlignment="Center"
                            FontSize="12"/>
                 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
-                    <TextBlock Text="{Binding StatusText}" 
-                               FontSize="12" Opacity="0.7"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <!-- Update Available Banner -->
+                    <Border Margin="0,0,0,0"
+                        IsVisible="{Binding UpdateAvailable}"
+                        Background="#10B981"
+                        CornerRadius="6"
+                        Padding="5,2"
+                        ZIndex="100">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <fi:SymbolIcon Symbol="ArrowDownload" FontSize="16" Foreground="White"/>
+                            <TextBlock Foreground="White" VerticalAlignment="Center">
+                                <Run Text="Update available: v"/>
+                                <Run Text="{Binding UpdateVersion}"/>
+                            </TextBlock>
+                            <Button Command="{Binding ApplyUpdateCommand}"
+                                    IsVisible="{Binding UpdateReady}"
+                                    Background="White"
+                                    Foreground="#10B981"
+                                    Padding="8,4"
+                                    CornerRadius="4"
+                                    FontSize="12">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <fi:SymbolIcon Symbol="ArrowSync" FontSize="12" Foreground="#10B981"/>
+                                    <TextBlock Text="Restart to update"/>
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="Downloading..." 
+                                    Foreground="White" 
+                                    Opacity="0.8"
+                                    FontSize="11"
+                                    VerticalAlignment="Center"
+                                    IsVisible="{Binding !UpdateReady}"/>
+                        </StackPanel>
+                    </Border>
+
                     
+                    <TextBlock Text="{Binding StatusText}" 
+                               FontSize="12" Opacity="0.7" VerticalAlignment="Center"/>
+
                     <!-- Cancel button when scanning -->
                     <Button Command="{Binding CancelScanCommand}"
                             IsVisible="{Binding IsScanning}"
@@ -382,6 +381,8 @@
                             FontSize="12">
                         <TextBlock Text="Cancel"/>
                     </Button>
+
+        
                 </StackPanel>
             </Grid>
         </Border>

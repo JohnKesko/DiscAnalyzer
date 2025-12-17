@@ -52,6 +52,11 @@ public class DesignTimeData
 
         vm.TreeItems.Add(root);
 
+        // Mock update available
+        vm.UpdateAvailable = true;
+        vm.UpdateVersion = "1.0.5";
+        vm.UpdateReady = true;
+
         return vm;
     }
 
