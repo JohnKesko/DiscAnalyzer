@@ -104,12 +104,21 @@ jobs:
           security list-keychain -d user -s $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-      - name: Pack with Velopack (macOS)
+      - name: Store notarization credentials
         if: runner.os == 'macOS'
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcrun notarytool store-credentials "DiscAnalyzerProfile" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID"
+
+      - name: Pack with Velopack (macOS)
+        if: runner.os == 'macOS'
+        env:
           APPLE_SIGN_APP: ${{ secrets.APPLE_SIGN_APP }}
           APPLE_SIGN_INSTALL: ${{ secrets.APPLE_SIGN_INSTALL }}
         run: |
@@ -121,7 +130,7 @@ jobs:
             --outputDir releases/${{ matrix.name }} \
             --signAppIdentity "$APPLE_SIGN_APP" \
             --signInstallIdentity "$APPLE_SIGN_INSTALL" \
-            --notaryProfile "--apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --team-id $APPLE_TEAM_ID"
+            --notaryProfile "DiscAnalyzerProfile"
 
       - name: Pack with Velopack (Windows)
         if: runner.os == 'Windows'
