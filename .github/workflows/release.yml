@@ -74,7 +74,7 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
+          dotnet publish Disc.Analyzer.csproj -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
       - name: Pack with Velopack (macOS)
         if: runner.os == 'macOS'
