@@ -1,6 +1,6 @@
 # DiscAnalyzer
 
-I needed a cross-platform disc-space viewer so I built in C# with Avalonia UI.
+I needed a cross-platform disc-space viewer so I built one in C# with Avalonia UI.   
 Feel free to use.
 
 ![DiscAnalyzer Screenshot](Assets/da-01.png)
