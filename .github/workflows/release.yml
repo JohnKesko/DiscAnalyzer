@@ -76,15 +76,52 @@ jobs:
         run: |
           dotnet publish Disc.Analyzer.csproj -c Release -r ${{ matrix.rid }} --self-contained -o publish/${{ matrix.rid }}
 
+      # macOS signing setup
+      - name: Install Apple certificates
+        if: runner.os == 'macOS'
+        env:
+          APP_CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APP_CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          INSTALLER_CERT_BASE64: ${{ secrets.APPLE_INSTALLER_P12 }}
+          INSTALLER_CERT_PASSWORD: ${{ secrets.APPLE_INSTALLER_PASSWORD }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # Import application certificate
+          echo "$APP_CERT_BASE64" | base64 --decode > $RUNNER_TEMP/app_cert.p12
+          security import $RUNNER_TEMP/app_cert.p12 -P "$APP_CERT_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          
+          # Import installer certificate
+          echo "$INSTALLER_CERT_BASE64" | base64 --decode > $RUNNER_TEMP/installer_cert.p12
+          security import $RUNNER_TEMP/installer_cert.p12 -P "$INSTALLER_CERT_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          
+          security list-keychain -d user -s $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
       - name: Pack with Velopack (macOS)
         if: runner.os == 'macOS'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_SIGN_APP: ${{ secrets.APPLE_SIGN_APP }}
+          APPLE_SIGN_INSTALL: ${{ secrets.APPLE_SIGN_INSTALL }}
         run: |
           vpk pack \
             --packId DiscAnalyzer \
             --packVersion ${{ steps.version.outputs.VERSION }} \
             --packDir publish/${{ matrix.rid }} \
             --mainExe DiscAnalyzer \
-            --outputDir releases/${{ matrix.name }}
+            --outputDir releases/${{ matrix.name }} \
+            --signAppIdentity "$APPLE_SIGN_APP" \
+            --signInstallIdentity "$APPLE_SIGN_INSTALL" \
+            --notaryProfile "--apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --team-id $APPLE_TEAM_ID"
 
       - name: Pack with Velopack (Windows)
         if: runner.os == 'Windows'
